@@ -1,0 +1,106 @@
+{% extends 'imports.html' %}
+{% load static %}
+
+{% block content %}
+{% include 'navbar.html' %}
+<style>
+    #selector {
+        display: flex;
+        justify-content: space-evenly;
+        align-items: center;
+        margin: 3rem;
+    }
+</style>
+<script>
+    function reload() {
+      window.location.href = "{% url 'home' %}";
+    }
+</script>
+<form action="{% url 'home' %}" method="post">
+    {% csrf_token %}
+    <input type="hidden" name="select_batch" value="{{select_batch}}">
+<div id="selector">
+    <div class="container">
+        <select class="form-select" aria-label="Default select example" id="Year_of_engineering" name="Year_of_engineering">
+            {% if selected.yr_of_engg == '0' %}
+            <option value="0" selected> -- Select Year of Engineering --</option>
+            {% else %}
+            <option value="0"> -- Select Year of Engineering --</option>
+            {% endif %}
+            {% for i in Year_of_engineering %}
+            {% if i != selected.yr_of_engg %}
+            <option value="{{i}}">{{i}}</option>
+            {% else %}
+            <option value="{{i}}" selected>{{i}}</option>
+            {% endif %}
+            {% endfor %}
+            <!-- <option value="2">Second Year (2<sup>nd</sup>)</option>
+            <option value="3">Third Year (3<sup>rd</sup>)</option>
+            <option value="4">Fourth Year (4<sup>th</sup>)</option> -->
+        </select>
+    </div>
+    <div class="container">
+        <select class="form-select" aria-label="Default select example" id="Semester" name="Semester">
+            {% if selected.sem != '0' %}
+            <option value="0"> -- Select Semester --</option>
+            {% else %}
+            <option value="0" selected> -- Select Semester --</option>
+            {% endif %}
+            {% for i in Semester %}
+            {% if i != selected.sem %}
+            <option value="{{i}}">{{i}}</option>
+            {% else %}
+            <option value="{{i}}" selected>{{i}}</option>
+            {% endif %}
+            {% endfor %}
+            <!-- <option value="1">First (I)</option>
+            <option value="2">Second (II)</option> -->
+        </select>
+    </div>
+    <div class="container">
+        <select class="form-select" aria-label="Default select example" id="Division" name="Division">
+            {% if selected.div != '0' %}
+            <option value="0"> -- Select Divison -- </option>
+            {% else %}
+            <option value="0" selected> -- Select Divison -- </option>
+            {% endif %}
+            {% for i in Division %}
+            {% if i != selected.div %}
+            <option value="{{i}}">{{i}}</option>
+            {% else %}
+            <option value="{{i}}" selected>{{i}}</option>
+            {% endif %}
+            {% endfor %}
+            <!-- <option value="1">One (I)</option>
+            <option value="2">Two (II)</option>
+            <option value="3">Three (III)</option>
+            <option value="4">Four (IV)</option> -->
+        </select>
+    </div>
+    {% if Batch|length != 0 %}
+    <div class="container">
+        <select class="form-select" aria-label="Default select example" id="Batch" name="Batch">
+            <option value="0" selected> -- Select Batch -- </option>
+            {% for i in Batch %}
+            <option value="{{i}}">{{i}}</option>
+            {% endfor %}
+            <!-- <option value="1">K1</option>
+            <option value="2">L1</option>
+            <option value="3">M1</option>
+            <option value="4">N1</option> -->
+        </select>
+    </div>
+    {% endif %}
+</div>
+<div class="container" style="display: flex;justify-content: center;align-items: center;">
+    <button type="button" onclick="reload()" class="btn btn-outline-secondary m-2">Reset</button>
+    <button class="btn btn-outline-success m-2" type="submit" onclick="">Submit</button>
+</div>
+</form> 
+<br>
+<div class="container" style="display: flex;align-items: center;justify-content: center;color: rgb(174, 38, 38);">
+    {% for i in messages %}
+        {{i}} <br>
+    {% endfor %}
+</div>
+{% endblock %}

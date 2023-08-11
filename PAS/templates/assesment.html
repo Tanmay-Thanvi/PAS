@@ -1,0 +1,407 @@
+{% extends 'imports.html' %}
+{% load static %}
+
+{% block content %}
+{% include 'navbar.html' %}
+<script>
+    var modal_for_roll;
+    function change_url() {
+        var select = document.getElementById('select_practical');
+        var url = window.location.href;
+        url = url.substring(0, url.length - 2) + select.value + url.substring(url.length - 2 + select.value.length)
+        // console.log(url);
+        window.location.href = url;
+    }
+
+    function formatDate(d) {
+        month = '' + (d.getMonth() + 1),
+            day = '' + d.getDate(),
+            year = d.getFullYear();
+
+        if (month.length < 2)
+            month = '0' + month;
+        if (day.length < 2)
+            day = '0' + day;
+
+        return [year, month, day].join('-');
+    }
+
+    function pass_parameters(param) {
+        document.getElementById('roll_modal').innerHTML = "&nbsp;" + param[0];
+        document.getElementById('roll_no_modal').value = param[0];
+
+        var dt = new Date(Date.parse(param[1]));
+        document.getElementById('dop_modal').value = formatDate(dt);
+
+        dt = new Date(Date.parse(param[2]));
+        document.getElementById('dos_modal').value = formatDate(dt);
+
+        document.getElementById('RPP_modal').value = param[3];
+        document.getElementById('SPO_modal').value = param[4];
+    }
+
+    function about_roll_no(params) {
+        document.getElementById('modal_roll').innerHTML = params[0];
+        $.get("{% url 'get_info' %}" + '?roll_no=' + params[0] + '&practical=' + params[1], function (data, status) {
+            if (status == 'success') {
+                // data["Roll No"] = 12
+                // var json = JSON.stringify(data);
+                // alert("Data: " + json + "\nStatus: " + status);
+
+                // console.log(data);
+                var student_info = data['student_info'];
+                // var json = JSON.stringify(student_info);
+                // console.log(json)
+                document.getElementById('Student_Name').innerHTML = student_info['Name'];
+                document.getElementById('Student_Class').innerHTML = student_info['Batch']['batch_grp']['year']['abbrevation'] + " " + student_info['Batch']['div']['num'];
+                document.getElementById('Student_Batch').innerHTML = student_info['Batch']['batch_grp']['Name'] + student_info['Batch']['div']['num'];
+
+                var student_assesment = data['Assesment']
+                // var json = JSON.stringify(student_assesment);
+                // console.log(json)
+
+                var prac_body = document.getElementById('prac_body');
+                prac_body.innerHTML = null
+                var cnt = 0,total=0;
+                for (const key in student_assesment) {
+                    if (Object.hasOwnProperty.call(student_assesment, key)) {
+                        const value = student_assesment[key];
+                        var tr = document.createElement("tr");
+                        var th = document.createElement("th");
+                        th.setAttribute('row', 'scope');
+                        th.innerHTML = key
+                        var td = document.createElement("td");
+                        if (value) {
+                            td.innerHTML = "✅";
+                            cnt++;
+                        }
+                        else{
+                            td.innerHTML = "❌";
+                        }
+                        tr.appendChild(th);
+                        tr.appendChild(td);
+                        prac_body.appendChild(tr);
+                    }
+                    total++;
+                }
+                document.getElementById('noca').innerHTML = cnt + "/" +total;
+            }
+            else {
+                alert("Error Occured : " + status)
+            }
+        });
+
+    }
+</script>
+<style>
+    th,
+    td {
+        text-align: center;
+        padding: 8px;
+    }
+
+    /* tr:nth-child(even) {
+        background-color: #;
+    } */
+    thead tr {
+        background-color: #111;
+        color: #eee;
+    }
+
+    tbody tr {
+        transition: all ease-in-out 0.25s;
+    }
+
+    tbody tr:hover {
+        transform: scale(1.02);
+    }
+
+    #roll_no {
+        text-decoration: underline;
+        cursor: pointer;
+    }
+</style>
+<div style="min-height: 10vh;display: flex;align-items: center;justify-content: center;">
+    {% for i in messages %}
+    <div class="alert alert-{{i.tags}} alert-dismissible fade show" role="alert" style="font-size: small;">
+        <strong>{{i.tags|title}}!</strong>
+        {{i}}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"
+            style="height: 1rem;width: 0.5rem;"></button>
+    </div>
+    {% endfor %}
+</div>
+<div class="container my-3">
+    <strong>
+        Batch Details :
+    </strong>
+    <br> <br>
+    <div class="row">
+        <div class="col-sm">
+            <span style="font-style: oblique;"> Class : </span> <span
+                style="font-weight: 300;">{{lab.batch.batch_grp.year.abbrevation}}-{{lab.batch.div.num}}</span>
+        </div>
+        <div class="col-sm">
+            <span style="font-style: oblique;"> Batch : </span> <span style="font-weight: 300;">
+                {{lab.batch}}{% if batch.div.num == 'I' %}1{% else %}{% if batch.div.roman == 'II' %}2{% else
+                %}{% if batch.div.roman == 'III' %}3{% endif %}
+                {% endif %}
+                {% endif %}
+            </span>
+        </div>
+        <div class="col-sm">
+            <span style="font-style: oblique;"> Sub : </span> <span style="font-weight: 300;">{{lab.sub}}</span>
+        </div>
+    </div>
+    <div class="container" style="margin: 2rem;">
+        <div class="row">
+            <div class="col-sm" style="display: flex;align-items: center;justify-content: space-around;">
+                <span style="font-style: bold;" style="width: 33%;"> Practical No. </span>
+                <select class="form-select" aria-label="Default select example" style="width: 33%;"
+                    onchange="change_url()" id="select_practical">
+                    {% if practical == 0 %}
+                    <option value="0" selected>-- Select --</option>
+                    {% else %}
+                    <option value="0">-- Select --</option>
+                    {% endif %}
+                    {% for i in practicals %}
+                    {% if i == practical %}
+                    <option value="{{i.id}}" selected>{{i.practical_num}} - {{i.title}}</option>
+                    {% else %}
+                    <option value="{{i.id}}">{{i.practical_num}} - {{i.title}}</option>
+                    {% endif %}
+                    {% endfor %}
+                </select>
+                <div></div>
+            </div>
+        </div>
+    </div>
+    <div class="container my-3" style="display: flex;align-items: center;justify-content: center;">
+        No. of Students who have completed :
+        <strong id="nos_c"></strong>
+    </div>
+    <table id="myTable" class="display">
+        <thead>
+            <tr>
+                <th>
+                    <center>Roll No</center>
+                </th>
+                <th>
+                    <center>Status</center>
+                </th>
+                <th>
+                    <center>Date of Performance</center>
+                </th>
+                <th>
+                    <center>Date of Submission</center>
+                </th>
+                <th>
+                    <center>RPP</center>
+                </th>
+                <TH>
+                    <center>SPO</center>
+                </TH>
+                <th>
+                    <center>Total</center>
+                </th>
+                <th>
+                    <center>Action</center>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if practical != 0 %}
+            {% for i in students %}
+            <!-- {{i}} -->
+            <tr>
+                <td id="roll_no" data-bs-toggle="modal" data-bs-target="#exampleModal_1"
+                    onclick="about_roll_no(['{{i.roll_no}}','{{practical.id}}'])">{{i.roll_no}}
+                </td>
+                {% if i in intersection %}
+                {% for j in assesment%}
+                <!-- {{j}} -->
+                {% if j.student == i %}
+                <td class="status">
+                    ✅
+                </td>
+                <td id="dop">
+                    {{j.date_of_performance}}
+                </td>
+                <td id="dos">
+                    {{j.date_of_submission}}
+                </td>
+                <td id="RPP">
+                    {{j.RPP}}
+                </td>
+                <td id="SPO">
+                    {{j.SPO}}
+                </td>
+                <td>
+                    {{j.RPP |add:j.SPO}}
+                </td>
+                <td>
+                    <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#exampleModal"
+                        onclick="pass_parameters(['{{i.roll_no}}','{{j.date_of_performance}}','{{j.date_of_submission}}','{{j.RPP}}','{{j.SPO}}'])">Edit</button>
+                </td>
+                {% endif %}
+                {% endfor %}
+                {% else %}
+                <td>
+                    ❌
+                </td>
+                <td>
+                    NA
+                </td>
+                <td>NA</td>
+                <td>0</td>
+                <td>0</td>
+                <td>
+                    0
+                </td>
+                <td>
+                    <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#exampleModal"
+                        onclick="pass_parameters(['{{i.roll_no}}','{{j.date_of_performance}}','{{j.date_of_submission}}',0,0])">Edit</button>
+                </td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+            {% endif %}
+        </tbody>
+    </table>
+    <script>
+        let table = new DataTable('#myTable', {
+            responsive: true
+        });
+    </script>
+</div>
+<!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Edit Information</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="{{request.get_full_path}}" method="post">
+                    {% csrf_token %}
+                    <div style="display: flex;justify-content: center;align-items: center;">
+                        <strong>
+                            Roll No : <span id="roll_modal"></span>
+                            <input type="hidden" id="roll_no_modal" name="roll_no">
+                        </strong>
+                    </div>
+                    <br>
+                    <div style="display: grid;grid-template-columns: auto auto;row-gap: 1rem;">
+                        <div>
+                            Date of Performance :
+                        </div>
+                        <div>
+                            <input id="dop_modal" name="dop" type="date">
+                        </div>
+                        <div>
+                            Date of Submission : </div>
+                        <div><input type="date" name="dos" id="dos_modal">
+                        </div>
+                        <div>
+                            RPP : </div>
+                        <div><input type="number" name="RPP" id="RPP_modal">
+                        </div>
+                        <div>
+                            SPO : </div>
+                        <div><input id="SPO_modal" name='SPO' type="number">
+                        </div>
+                    </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="submit" class="btn btn-primary">Save changes</button>
+            </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="exampleModal_1" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title fs-6" id="exampleModalLabel">Information About <strong id="modal_roll"></strong>
+                </h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <ul class="nav nav-tabs" id="myTab" role="tablist"
+                    style="display: flex;align-items: center;justify-content: center;">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="home-tab" data-bs-toggle="tab"
+                            data-bs-target="#home-tab-pane" type="button" role="tab" aria-controls="home-tab-pane"
+                            aria-selected="true" style="color: #111;">Student Info</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="profile-tab" data-bs-toggle="tab"
+                            data-bs-target="#profile-tab-pane" type="button" role="tab" aria-controls="profile-tab-pane"
+                            aria-selected="false" style="color: #111;">Assesment</button>
+                    </li>
+                </ul>
+                <div class="tab-content" id="myTabContent">
+                    <div class="tab-pane fade show active" id="home-tab-pane" role="tabpanel" aria-labelledby="home-tab"
+                        tabindex="0" style="min-height: 15vh;">
+                        <!-- Name :  -->
+                        <div class="container m-3">
+                            <div>
+                                Name :
+                                <span id="Student_Name">
+
+                                </span>
+                            </div>
+                            <div>
+                                Class : <span id="Student_Class">
+
+                                </span>
+                            </div>
+
+                            <div>
+                                Batch :
+                                <span id="Student_Batch">
+
+                                </span>
+                            </div>
+                            <div>
+                                No. of completed assignments :
+                                <span id="noca">
+
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="profile-tab-pane" role="tabpanel" aria-labelledby="profile-tab"
+                        tabindex="0" style="min-height: 15vh;">
+                        <div class="container my-3" style="display: flex;align-items: center;justify-content: center;">
+                            <div style="overflow-y: auto;height: 25vh;width: 100%;overflow-x: hidden;">
+                                <table class="table table-hover">
+                                    <thead style="position: sticky;top:0px">
+                                        <tr>
+                                            <th scope="col">Prac No.</th>
+                                            <th scope="col">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="prac_body">
+                                        
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    var cnt = document.getElementsByClassName('status');
+    document.getElementById('nos_c').innerHTML = '&nbsp;' + cnt.length;
+</script>
+{% endblock %}

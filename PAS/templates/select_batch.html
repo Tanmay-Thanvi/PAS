@@ -1,0 +1,86 @@
+{% extends 'imports.html' %}
+{% load static %}
+
+{% block content %}
+{% include 'navbar.html' %}
+<style>
+    .batch_container {
+        border-radius: 0.5rem;
+        margin: 4rem;
+        height: 20%;
+        background-image: linear-gradient(45deg, #39824D, #8acbbb);
+        padding: 1rem;
+    }
+
+    .batch_row {
+        height: 6rem;
+        /* background-color: transparent; */
+        margin: 1rem;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        font-weight: 300;
+
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 16px;
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+</style>
+<div class="container my-3">
+    <div class="container">
+        <strong>
+            Selected Batch Details :
+        </strong>
+        <br> <br>
+        <div class="row">
+            <div class="col-sm">
+                <span style="font-style: oblique;"> Year : </span> <span
+                    style="font-weight: 300;">{{final_selected.yr_of_engg}}</span>
+            </div>
+            <div class="col-sm">
+                <span style="font-style: oblique;"> Div : </span> <span
+                    style="font-weight: 300;">
+                    {% if final_selected.div == 'One (1)' %}I{% else %}{% if final_selected.div == 'Two (2)' %}II{% else %}{% if final_selected.div == 'Three (3)' %}III{% else %}IV{% endif %}{% endif %}{% endif %}
+                </span>
+            </div>
+            <div class="col-sm">
+                <span style="font-style: oblique;"> Sem : </span> <span
+                    style="font-weight: 300;">{{final_selected.sem}}</span>
+            </div>
+            <div class="col-sm">
+                <span style="font-style: oblique;"> Batch : </span> <span
+                    style="font-weight: 300;">{{final_selected.batch}}</span>
+            </div>
+        </div>
+    </div>
+    <div class="container my-3">
+        <div class="batch_container">
+            {% if batches|length == 0 %}
+            <div style="display: flex;justify-content: center;align-items: center;height: 3rem;">
+                No Batches Found
+            </div>
+            {% else %}
+            {% for i in batches %}
+            <div class="batch_row">
+                <div style="width:33%">
+                    {{i.sub}}
+                </div>
+                <div style="width: 33%;">
+                    Batch : {{i.batch.batch_grp.Name}}{{i.batch.div.num}}
+                </div>
+                <div style="width: auto;">
+                    <a href="{% url 'assesment' i.id 0 %}">
+                        <button class="btn btn-success" style="background-color: #343A40;">Go</button>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}
